@@ -1,1 +1,13 @@
- 
+redback
+requests
+sncosmo
+bilby
+selenium
+lxml
+nestle
+iminuit
+progress
+openpyxl
+celery[redis]
+celery-singleton
+scipy==1.13.0

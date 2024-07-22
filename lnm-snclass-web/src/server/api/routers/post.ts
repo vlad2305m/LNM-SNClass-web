@@ -6,13 +6,18 @@ import {
   publicProcedure,
 } from "~/server/api/trpc";
 import { posts } from "~/server/db/schema";
+import { celery_exec } from "~/server/celery";
+
 
 export const postRouter = createTRPCRouter({
   hello: publicProcedure
     .input(z.object({ text: z.string() }))
-    .query(({ input }) => {
+    .query(async ({ input }) => {
+      //const ans = await celery_exec("tasks.apply_model", ["ZTF23aagkutf", "salt2", null]);
+      const ans = await celery_exec("tasks.get_lasair_phot", ["ZTF23aagkutf"]);
       return {
-        greeting: `Hello ${input.text}`,
+        greeting: `Hello ${input.text}, ${ans.band}`,
+        data: ans,
       };
     }),
 

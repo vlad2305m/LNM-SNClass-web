@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { LatestPost } from "~/app/_components/post";
+import { SNModelChartComponent } from "~/components/snmodel-chart";
 import { getServerAuthSession } from "~/server/auth";
 import { api, HydrateClient } from "~/trpc/server";
 
@@ -56,6 +57,7 @@ export default async function Home() {
               >
                 {session ? "Sign out" : "Sign in"}
               </Link>
+              <SNModelChartComponent phot={hello.data}></SNModelChartComponent>
             </div>
           </div>
 
