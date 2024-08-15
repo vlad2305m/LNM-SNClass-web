@@ -13,7 +13,7 @@ import {
   accounts,
   sessions,
   users,
-  verificationTokens,
+  //verificationTokens,
 } from "~/server/db/schema";
 
 /**
@@ -56,7 +56,7 @@ export const authOptions: NextAuthOptions = {
     usersTable: users,
     accountsTable: accounts,
     sessionsTable: sessions,
-    verificationTokensTable: verificationTokens,
+    //verificationTokensTable: verificationTokens,
   }) as Adapter,
   providers: [
     DiscordProvider({

@@ -1,13 +1,17 @@
+import 'server-only';
 import { relations, sql } from "drizzle-orm";
 import {
   bigint,
   index,
   int,
+  float,
   mysqlTableCreator,
   primaryKey,
   text,
   timestamp,
+  time,
   varchar,
+  mysqlEnum,
 } from "drizzle-orm/mysql-core";
 import { type AdapterAccount } from "next-auth/adapters";
 
@@ -38,19 +42,64 @@ export const posts = createTable(
   })
 );
 
-export const users = createTable("user", {
-  id: varchar("id", { length: 255 })
-    .notNull()
-    .primaryKey()
-    .$defaultFn(() => crypto.randomUUID()),
-  name: varchar("name", { length: 255 }),
-  email: varchar("email", { length: 255 }).notNull(),
-  emailVerified: timestamp("email_verified", {
-    mode: "date",
-    fsp: 3,
-  }).default(sql`CURRENT_TIMESTAMP(3)`),
-  perm: int("lvl").default(0).notNull(),
-  image: varchar("image", { length: 255 }),
+export const model_fits = createTable(
+  "model_fits",
+  {
+    id: bigint("id", { mode: "number" }).primaryKey().autoincrement(),
+    transient: varchar("transient", { length: 127 }).notNull().default(""),
+    n_points: int("n").notNull().default(0),
+    model: varchar("model", { length: 127 }).notNull().default(""),
+    status: mysqlEnum('status', ['pending', 'done', 'error']).notNull().default("error"),
+
+    z: float("z").notNull().default(0),
+    t0: float("t0").notNull().default(0),
+    amplitude: float("A").notNull().default(0),
+    x0: float("x0").notNull().default(0),
+    x1: float("x1").notNull().default(0),
+    c: float("c").notNull().default(0),
+
+    z_err: float("z_err").notNull().default(0),
+    t0_err: float("t0_err").notNull().default(0),
+    amplitude_err: float("A_err").notNull().default(0),
+    x0_err: float("x0_err").notNull().default(0),
+    x1_err: float("x1_err").notNull().default(0),
+    c_err: float("c_err").notNull().default(0),
+
+    logl: float("logl").notNull().default(0),
+    logz: float("logz").notNull().default(0),
+    logl_err: float("logl_err").notNull().default(0),
+    logz_err: float("logz_err").notNull().default(0),
+
+    time_spent: time('time', { fsp: 2 }).notNull().default("00:00:00.00"),
+    createdAt: timestamp("created_at")
+      .default(sql`CURRENT_TIMESTAMP`)
+      .notNull(),
+    updatedAt: timestamp("updated_at").onUpdateNow(),
+  }
+);
+
+
+
+
+
+
+export const CAN_COMPUTE_TRANSIENT = 10;
+
+export const users = createTable(
+  "user", 
+  {
+    id: varchar("id", { length: 255 })
+      .notNull()
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    name: varchar("name", { length: 255 }),
+    email: varchar("email", { length: 255 }).notNull(),
+    emailVerified: timestamp("email_verified", {
+      mode: "date",
+      fsp: 3,
+    }).default(sql`CURRENT_TIMESTAMP(3)`),
+    perm: int("lvl").default(0).notNull(),
+    image: varchar("image", { length: 255 }),
 });
 
 export const usersRelations = relations(users, ({ many }) => ({
