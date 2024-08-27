@@ -20,6 +20,13 @@ import traceback
 # import functools
 
 app = Celery('tasks', backend='redis://redis', broker='redis://redis')
+# app.conf.broker_transport_options = {
+#     'priority_steps': list(range(3)),
+#     'sep': ':',
+#     'queue_order_strategy': 'priority',
+# }
+# app.conf.task_default_priority = 2
+
 x0x1c = ['salt2'] # for lookup purposes
 
 @app.task

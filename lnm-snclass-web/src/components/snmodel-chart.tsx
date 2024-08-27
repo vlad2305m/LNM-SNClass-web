@@ -49,13 +49,16 @@ export type Props = {
     time_spent: string;},
 }
 export function SNModelChartComponent(props: Props) {
-  let ymin=props.phot[0]!.flux, ymax=props.phot[0]!.flux, xmin=Math.floor(props.phot[0]!.time), xmax=Math.ceil(props.phot[0]!.time);
-  for (const p of props.phot) {
-    ymin=Math.min(ymin, p.flux); ymax=Math.max(ymax, p.flux);
-    xmin=Math.min(xmin, Math.floor(p.time)); xmax=Math.max(xmax, Math.ceil(p.time));
+  let ymin=0, ymax=0, xmin=0, xmax=0;
+  if (props.phot[0]){
+    ymin=props.phot[0]!.flux, ymax=props.phot[0]!.flux, xmin=Math.floor(props.phot[0]!.time), xmax=Math.ceil(props.phot[0]!.time);
+    for (const p of props.phot) {
+      ymin=Math.min(ymin, p.flux); ymax=Math.max(ymax, p.flux);
+      xmin=Math.min(xmin, Math.floor(p.time)); xmax=Math.max(xmax, Math.ceil(p.time));
+    }
+    const yd = (ymax-ymin)*0.02;
+    ymax+=yd; ymin-=yd;
   }
-  const yd = (ymax-ymin)*0.02;
-  ymax+=yd; ymin-=yd;
   const cardpad = "p-3";
   return (
     <Card>
@@ -65,7 +68,7 @@ export function SNModelChartComponent(props: Props) {
       </CardHeader>
       <CardContent className={cardpad}>
         <ChartContainer config={chartConfig} className="w-full">
-          <ComposedChart
+          {props.phot[0] ? <ComposedChart
             accessibilityLayer
             data={props.model.data}
             margin={{
@@ -115,7 +118,7 @@ export function SNModelChartComponent(props: Props) {
               dot={false}
               isAnimationActive={false}
             />)}
-          </ComposedChart>
+          </ComposedChart> : <></>}
         </ChartContainer>
       </CardContent>
       <CardFooter className={cardpad}>

@@ -5,6 +5,7 @@ import { db } from "./db";
 import { model_fits } from "./db/schema";
 import { and, eq } from "drizzle-orm";
 import assert from "assert";
+import { cSecondsToTime } from '~/lib/times';
 
 export const celery_client: Celery.Client = Celery.createClient({
   brokerUrl: "redis://localhost",
@@ -111,15 +112,14 @@ export async function fit_model(transient: string, model: string) {
   else {insp = db.update(model_fits).set({
     status: "pending",
   }).where(eq(model_fits.id, ex_data.id))}
-  const fit_res = await fit_model_task.applyAsync({args:[data, model], kwargs:{}, compression: Celery.Compressor.Zlib}).get();
+  const fit_res = await fit_model_task.applyAsync({args:[data, model], kwargs:{}, compression: Celery.Compressor.Zlib, queue: "slow"}).get();
   if (fit_res.time === undefined) {
     void db.update(model_fits).set({
       status: "error", //TODO error handling
     }).where(and(eq(model_fits.transient, transient), eq(model_fits.model, model), eq(model_fits.n_points, n_points))).then();
     return undefined;
   }
-  const float_to_2dstr = (n: number) => (Math.floor(n)%100).toString().padStart(2, "0");
-  const time_str = float_to_2dstr(fit_res.time/3600)+":"+float_to_2dstr(fit_res.time/60)+":"+float_to_2dstr(fit_res.time)+"."+float_to_2dstr(fit_res.time*100);
+  const time_str = cSecondsToTime(Math.floor(fit_res.time*100));
   const ans = {amplitude: 0, amplitude_err: 0, 
     x0: 0, x0_err: 0, 
     x1: 0, x1_err: 0, 
