@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Suspense } from "react";
 
-import { LatestPost } from "~/app/_components/post";
+//import { LatestPost } from "~/app/_components/post";
 import { SNModelChartComponent } from "~/components/snmodel-chart";
 import { getServerAuthSession } from "~/server/auth";
 import { get_db_models_and_phot, get_db_or_fit_model, get_model_flux_for_graph, get_phot_data_for_graph } from "~/server/celery";
@@ -65,7 +65,7 @@ export default async function Home() {
             </div>
           </div>
 
-          {session?.user&&null && <LatestPost />}
+          {/* {session?.user&&null && <LatestPost />} */}
         </div>
       </main>
     // </HydrateClient>

@@ -71,7 +71,7 @@ const get_cached_phot_data = unstable_cache(
 
 export async function get_phot_data_for_graph(transient: string) {
   let photDataT = await get_cached_phot_data(transient);
-  if (photDataT.exc_message && photDataT.exc_message[0] && photDataT.exc_message[0].includes("does not exist in the catalog")) return [];
+  if (photDataT.exc_message?.[0]?.includes("does not exist in the catalog")) return [];
   if (photDataT.time === undefined) {
     revalidateTag("lasair");
     photDataT = await get_cached_phot_data(transient);
@@ -159,7 +159,7 @@ export const get_db_models_and_phot = unstable_cache(
 )
 export async function get_db_models_and_phot_uncached(transient: string) {
   const data = await get_cached_phot_data(transient);
-  if (data.exc_message && data.exc_message[0] && data.exc_message[0].includes("does not exist in the catalog")) return {error: "Transient not found in the catalog"};
+  if (data.exc_message?.[0]?.includes("does not exist in the catalog")) return {error: "Transient not found in the catalog"};
   const n_points = data.time.length;
   const mod_data = await db.query.model_fits.findMany({
     where: (model_fits, {eq, and}) => and(eq(model_fits.transient, transient), eq(model_fits.n_points, n_points)),

@@ -1,9 +1,9 @@
 import 'server-only';
 import { on } from 'events';
-import { Session } from "next-auth";
+import type { Session } from "next-auth";
 import { revalidateTag } from "next/cache";
 import { z } from "zod";
-import * as Redis from "ioredis";
+import Redis from "ioredis";
 
 import {
   createTRPCRouter,
@@ -15,11 +15,12 @@ import { db } from "~/server/db";
 import { CAN_COMPUTE_TRANSIENT } from "~/server/db/schema";
 import { KILLER_TRANSIENT } from '~/lib/shared_constants';
 import { models_list } from '~/components/snmodel-chart-model-to-type-map';
+import type { Props } from "~/components/snmodel-chart";
 
 const redis_pub = new Redis();
-setInterval(() => redis_pub.publish("modelFitForModelsPage", '{"transient":"'+KILLER_TRANSIENT+'"}'),  10 * 60 * 1000); // kill dangling connections to Redis
+setInterval(() => void redis_pub.publish("modelFitForModelsPage", '{"transient":"'+KILLER_TRANSIENT+'"}'),  10 * 60 * 1000); // kill dangling connections to Redis
 const redis_sub = new Redis();
-redis_sub.subscribe("modelFitForModelsPage", (err: any, count: number) => {
+redis_sub.subscribe("modelFitForModelsPage", (err, count: number) => {
   if (err) {
     // Just like other commands, subscribe() can fail for some reasons,
     // ex network issues.
@@ -63,15 +64,15 @@ export const postRouter = createTRPCRouter({
             console.log("Flux "+data.model);
             const phot = await get_model_flux_for_graph([{model: data.model, params: {t0: data.t0, z: data.z, amplitude: data.amplitude, x0: data.x0, x1: data.x1, c: data.c}}]);
             console.log("Pub "+data.model);
-            redis_pub.publish("modelFitForModelsPage", JSON.stringify({...data, ...phot[0]!}));
+            void redis_pub.publish("modelFitForModelsPage", JSON.stringify({...data, ...phot[0]!}));
           }
           return {model: model, params: {
             amplitude: fit_model?.amplitude,
             x0: fit_model?.x0,
             x1: fit_model?.x1,
             c:  fit_model?.c,
-            t0: fit_model!.t0,
-            z:  fit_model!.z,
+            t0: fit_model.t0,
+            z:  fit_model.z,
           }}
         }))
       ;
@@ -106,8 +107,8 @@ export const postRouter = createTRPCRouter({
         
       // }
       try {
-        for await (const [channel, message] of on(redis_sub, "message")) {
-          const ans = JSON.parse(message);
+        for await (const [channel, message] of on(redis_sub, "message") as AsyncIterableIterator<[string, string]>) {
+          const ans = JSON.parse(message) as Props["model"];
           if (ans.transient !== KILLER_TRANSIENT) console.log(`Received ${ans.transient} from ${channel}`);
           if (ans.transient === transient || ans.transient === KILLER_TRANSIENT) yield ans;
         }
@@ -120,7 +121,9 @@ export const postRouter = createTRPCRouter({
 
 export async function can_compute_transient(session: Session) {
   let can_compute = false;
-  if (session?.user) var perm_lvl = (await db.query.users.findFirst({where: (users, {eq}) => eq(users.id, session.user.id)}))?.perm;
-  if (perm_lvl && perm_lvl >= CAN_COMPUTE_TRANSIENT) can_compute = true;
+  if (session?.user) {
+    const perm_lvl = (await db.query.users.findFirst({where: (users, {eq}) => eq(users.id, session.user.id)}))?.perm;
+    if (perm_lvl && perm_lvl >= CAN_COMPUTE_TRANSIENT) can_compute = true;
+  }
   return can_compute;
 }

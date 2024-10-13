@@ -18,7 +18,6 @@ export default function Model({params}: {params: {transient: string | null}}) {
     return await can_compute_transient(session!);
   })();
 
-
   return <main className="flex min-h-screen flex-col items-center justify-center bg-gray-50 text-current">
     <ModelsClient can_compute={can_compute} phot={phot_data} models={models_and_phot} transient={transient}></ModelsClient>
   </main>;
